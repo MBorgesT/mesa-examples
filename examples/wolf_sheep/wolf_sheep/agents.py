@@ -22,26 +22,40 @@ class Sheep(RandomWalker):
         self.random_move()
         living = True
 
-        if self.model.grass:
+        if self.model.grass or self.model.tree:
             # Reduce energy
             self.energy -= 1
 
+        if self.model.grass:
             # If there is grass available, eat it
             this_cell = self.model.grid.get_cell_list_contents([self.pos])
-            grass_patch = [obj for obj in this_cell if isinstance(obj, GrassPatch)][0]
-            if grass_patch.fully_grown:
-                self.energy += self.model.sheep_gain_from_food
-                grass_patch.fully_grown = False
+            
+            grass_patch_list = [obj for obj in this_cell if isinstance(obj, GrassPatch)]
+            if len(grass_patch_list) > 0:
+                grass_patch = grass_patch_list[0]
+                if grass_patch.fully_grown:
+                    self.energy += self.model.sheep_gain_from_grass
+                    grass_patch.fully_grown = False
 
+        if self.model.tree:
+            # If there is tree available, eat it
+            this_cell = self.model.grid.get_cell_list_contents([self.pos])
+            tree_list = [obj for obj in this_cell if isinstance(obj, Tree)]
+            if len(tree_list) > 0:
+                tree = tree_list[0]
+                if tree.fully_grown:
+                    self.energy += self.model.sheep_gain_from_tree
+                    tree.fully_grown = False
+
+        if (self.model.grass or self.model.tree) and self.energy < 0:
             # Death
-            if self.energy < 0:
-                self.model.grid.remove_agent(self)
-                self.model.schedule.remove(self)
-                living = False
+            self.model.grid.remove_agent(self)
+            self.model.schedule.remove(self)
+            living = False
 
         if living and self.random.random() < self.model.sheep_reproduce:
             # Create a new sheep:
-            if self.model.grass:
+            if self.model.grass or self.model.tree:
                 self.energy /= 2
             lamb = Sheep(
                 self.model.next_id(), self.pos, self.model, self.moore, self.energy
@@ -116,5 +130,33 @@ class GrassPatch(mesa.Agent):
                 # Set as fully grown
                 self.fully_grown = True
                 self.countdown = self.model.grass_regrowth_time
+            else:
+                self.countdown -= 1
+
+
+class Tree(mesa.Agent):
+    """
+    A patch of grass that grows at a fixed rate and it is eaten by sheep
+    """
+
+    def __init__(self, unique_id, pos, model, fully_grown, countdown):
+        """
+        Creates a new patch of grass
+
+        Args:
+            grown: (boolean) Whether the patch of grass is fully grown or not
+            countdown: Time for the patch of grass to be fully grown again
+        """
+        super().__init__(unique_id, model)
+        self.fully_grown = fully_grown
+        self.countdown = countdown
+        self.pos = pos
+
+    def step(self):
+        if not self.fully_grown:
+            if self.countdown <= 0:
+                # Set as fully grown
+                self.fully_grown = True
+                self.countdown = self.model.tree_regrowth_time
             else:
                 self.countdown -= 1

@@ -8,11 +8,12 @@ Replication of the model found in NetLogo:
     Center for Connected Learning and Computer-Based Modeling,
     Northwestern University, Evanston, IL.
 """
+import numpy as np
 
 import mesa
 
 from wolf_sheep.scheduler import RandomActivationByTypeFiltered
-from wolf_sheep.agents import Sheep, Wolf, GrassPatch
+from wolf_sheep.agents import Sheep, Wolf, GrassPatch, Tree
 
 
 class WolfSheep(mesa.Model):
@@ -32,8 +33,11 @@ class WolfSheep(mesa.Model):
     wolf_gain_from_food = 20
 
     grass = False
+    tree = False
     grass_regrowth_time = 30
-    sheep_gain_from_food = 4
+    tree_regrowth_time = 60
+    sheep_gain_from_grass = 4
+    sheep_gain_from_tree = 8
 
     verbose = False  # Print-monitoring
 
@@ -51,8 +55,11 @@ class WolfSheep(mesa.Model):
         wolf_reproduce=0.05,
         wolf_gain_from_food=20,
         grass=False,
+        tree=False,
         grass_regrowth_time=30,
-        sheep_gain_from_food=4,
+        tree_regrowth_time=60,
+        sheep_gain_from_grass=4,
+        sheep_gain_from_tree=8
     ):
         """
         Create a new Wolf-Sheep model with the given parameters.
@@ -66,7 +73,7 @@ class WolfSheep(mesa.Model):
             grass: Whether to have the sheep eat grass for energy
             grass_regrowth_time: How long it takes for a grass patch to regrow
                                  once it is eaten
-            sheep_gain_from_food: Energy sheep gain from grass, if enabled.
+            sheep_gain_from_grass: Energy sheep gain from grass, if enabled.
         """
         super().__init__()
         # Set parameters
@@ -78,8 +85,11 @@ class WolfSheep(mesa.Model):
         self.wolf_reproduce = wolf_reproduce
         self.wolf_gain_from_food = wolf_gain_from_food
         self.grass = grass
+        self.tree = tree
         self.grass_regrowth_time = grass_regrowth_time
-        self.sheep_gain_from_food = sheep_gain_from_food
+        self.tree_regrowth_time = tree_regrowth_time
+        self.sheep_gain_from_grass = sheep_gain_from_grass
+        self.sheep_gain_from_tree = sheep_gain_from_tree
 
         self.schedule = RandomActivationByTypeFiltered(self)
         self.grid = mesa.space.MultiGrid(self.width, self.height, torus=True)
@@ -90,6 +100,9 @@ class WolfSheep(mesa.Model):
                 "Grass": lambda m: m.schedule.get_type_count(
                     GrassPatch, lambda x: x.fully_grown
                 ),
+                "Tree": lambda m: m.schedule.get_type_count(
+                    Tree, lambda x: x.fully_grown
+                ),
             }
         )
 
@@ -97,7 +110,7 @@ class WolfSheep(mesa.Model):
         for i in range(self.initial_sheep):
             x = self.random.randrange(self.width)
             y = self.random.randrange(self.height)
-            energy = self.random.randrange(2 * self.sheep_gain_from_food)
+            energy = self.random.randrange(2 * self.sheep_gain_from_grass)
             sheep = Sheep(self.next_id(), (x, y), self, True, energy)
             self.grid.place_agent(sheep, (x, y))
             self.schedule.add(sheep)
@@ -111,19 +124,61 @@ class WolfSheep(mesa.Model):
             self.grid.place_agent(wolf, (x, y))
             self.schedule.add(wolf)
 
-        # Create grass patches
-        if self.grass:
+        if self.grass and self.tree:
+            # Alternates between tree and grass on generation
             for agent, x, y in self.grid.coord_iter():
+                
+                result = np.random.choice(['grass', 'tree'])
                 fully_grown = self.random.choice([True, False])
+                if result == 'grass':
+                    if fully_grown:
+                        countdown = self.grass_regrowth_time
+                    else:
+                        countdown = self.random.randrange(self.grass_regrowth_time)
 
-                if fully_grown:
-                    countdown = self.grass_regrowth_time
+                    patch = GrassPatch(self.next_id(), (x, y), self, fully_grown, countdown)
+                    self.grid.place_agent(patch, (x, y))
+                    self.schedule.add(patch)
+                elif result == 'tree':
+                    if fully_grown:
+                        countdown = self.tree_regrowth_time
+                    else:
+                        countdown = self.random.randrange(self.tree_regrowth_time)
+
+                    patch = Tree(self.next_id(), (x, y), self, fully_grown, countdown)
+                    self.grid.place_agent(patch, (x, y))
+                    self.schedule.add(patch)
                 else:
-                    countdown = self.random.randrange(self.grass_regrowth_time)
+                    raise Exception("This shouldn't happen :|")
 
-                patch = GrassPatch(self.next_id(), (x, y), self, fully_grown, countdown)
-                self.grid.place_agent(patch, (x, y))
-                self.schedule.add(patch)
+        else:
+        # Create grass patches
+            if self.grass:
+                for agent, x, y in self.grid.coord_iter():
+                    fully_grown = self.random.choice([True, False])
+
+                    if fully_grown:
+                        countdown = self.grass_regrowth_time
+                    else:
+                        countdown = self.random.randrange(self.grass_regrowth_time)
+
+                    patch = GrassPatch(self.next_id(), (x, y), self, fully_grown, countdown)
+                    self.grid.place_agent(patch, (x, y))
+                    self.schedule.add(patch)
+
+            # Create trees
+            elif self.tree:
+                for agent, x, y in self.grid.coord_iter():
+                    fully_grown = self.random.choice([True, False])
+
+                    if fully_grown:
+                        countdown = self.tree_regrowth_time
+                    else:
+                        countdown = self.random.randrange(self.tree_regrowth_time)
+
+                    patch = Tree(self.next_id(), (x, y), self, fully_grown, countdown)
+                    self.grid.place_agent(patch, (x, y))
+                    self.schedule.add(patch)
 
         self.running = True
         self.datacollector.collect(self)

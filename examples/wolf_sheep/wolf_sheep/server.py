@@ -1,6 +1,6 @@
 import mesa
 
-from wolf_sheep.agents import Wolf, Sheep, GrassPatch
+from wolf_sheep.agents import Wolf, Sheep, GrassPatch, Tree
 from wolf_sheep.model import WolfSheep
 
 
@@ -26,9 +26,20 @@ def wolf_sheep_portrayal(agent):
 
     elif type(agent) is GrassPatch:
         if agent.fully_grown:
-            portrayal["Color"] = ["#00FF00", "#00CC00", "#009900"]
+            portrayal["Color"] = ["#00CC00", "#00CC00", "#00CC00"]
         else:
-            portrayal["Color"] = ["#84e184", "#adebad", "#d6f5d6"]
+            portrayal["Color"] = ["#adebad", "#adebad", "#adebad"]
+        portrayal["Shape"] = "rect"
+        portrayal["Filled"] = "true"
+        portrayal["Layer"] = 0
+        portrayal["w"] = 1
+        portrayal["h"] = 1
+
+    elif type(agent) is Tree:
+        if agent.fully_grown:
+            portrayal["Color"] = ["#015401", "#015401", "#015401"]
+        else:
+            portrayal["Color"] = ["#adebad", "#adebad", "#adebad"]
         portrayal["Shape"] = "rect"
         portrayal["Filled"] = "true"
         portrayal["Layer"] = 0
@@ -43,7 +54,8 @@ chart_element = mesa.visualization.ChartModule(
     [
         {"Label": "Wolves", "Color": "#AA0000"},
         {"Label": "Sheep", "Color": "#666666"},
-        {"Label": "Grass", "Color": "#00AA00"},
+        {"Label": "Grass", "Color": "#00CC00"},
+        {"Label": "Tree", "Color": "#015401"},
     ]
 )
 
@@ -51,7 +63,9 @@ model_params = {
     # The following line is an example to showcase StaticText.
     "title": mesa.visualization.StaticText("Parameters:"),
     "grass": mesa.visualization.Checkbox("Grass Enabled", True),
+    "tree": mesa.visualization.Checkbox("Tree Enabled", True),
     "grass_regrowth_time": mesa.visualization.Slider("Grass Regrowth Time", 20, 1, 50),
+    "tree_regrowth_time": mesa.visualization.Slider("Tree Regrowth Time", 40, 1, 100),
     "initial_sheep": mesa.visualization.Slider(
         "Initial Sheep Population", 100, 10, 300
     ),
@@ -70,7 +84,8 @@ model_params = {
     "wolf_gain_from_food": mesa.visualization.Slider(
         "Wolf Gain From Food Rate", 20, 1, 50
     ),
-    "sheep_gain_from_food": mesa.visualization.Slider("Sheep Gain From Food", 4, 1, 10),
+    "sheep_gain_from_grass": mesa.visualization.Slider("Sheep Gain From Grass", 4, 1, 10),
+    "sheep_gain_from_tree": mesa.visualization.Slider("Sheep Gain From Tree", 8, 1, 20),
 }
 
 server = mesa.visualization.ModularServer(
