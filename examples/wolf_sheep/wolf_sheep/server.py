@@ -1,6 +1,6 @@
 import mesa
 
-from wolf_sheep.agents import Wolf, Sheep, GrassPatch, Tree
+from wolf_sheep.agents import Wolf, Sheep, GrassPatch, Tree, Bear
 from wolf_sheep.model import WolfSheep
 
 
@@ -21,6 +21,13 @@ def wolf_sheep_portrayal(agent):
         # https://icons8.com/web-app/36821/German-Shepherd
         portrayal["scale"] = 0.9
         portrayal["Layer"] = 2
+        portrayal["text"] = round(agent.energy, 1)
+        portrayal["text_color"] = "White"
+        
+    elif type(agent) is Bear:
+        portrayal["Shape"] = "wolf_sheep/resources/bear.png"
+        portrayal["scale"] = 0.9
+        portrayal["Layer"] = 3
         portrayal["text"] = round(agent.energy, 1)
         portrayal["text_color"] = "White"
 
@@ -53,6 +60,7 @@ canvas_element = mesa.visualization.CanvasGrid(wolf_sheep_portrayal, 20, 20, 500
 chart_element = mesa.visualization.ChartModule(
     [
         {"Label": "Wolves", "Color": "#AA0000"},
+        {"Label": "Bears", "Color": "#8c5600"},
         {"Label": "Sheep", "Color": "#666666"},
         {"Label": "Grass", "Color": "#00CC00"},
         {"Label": "Tree", "Color": "#015401"},
@@ -82,6 +90,18 @@ model_params = {
         description="The rate at which wolf agents reproduce.",
     ),
     "wolf_gain_from_food": mesa.visualization.Slider(
+        "Wolf Gain From Food Rate", 20, 1, 50
+    ),
+    "initial_bears": mesa.visualization.Slider("Initial Bear Population", 30, 10, 300),
+    "bear_reproduce": mesa.visualization.Slider(
+        "Bear Reproduction Rate",
+        0.03,
+        0.01,
+        1.0,
+        0.01,
+        description="The rate at which bear agents reproduce.",
+    ),
+    "bear_gain_from_food": mesa.visualization.Slider(
         "Wolf Gain From Food Rate", 20, 1, 50
     ),
     "sheep_gain_from_grass": mesa.visualization.Slider("Sheep Gain From Grass", 4, 1, 10),

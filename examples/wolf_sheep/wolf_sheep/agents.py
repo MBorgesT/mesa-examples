@@ -106,6 +106,61 @@ class Wolf(RandomWalker):
                 self.model.schedule.add(cub)
 
 
+class Bear(RandomWalker):
+    """
+    A bear that walks around, reproduces (asexually) and eats sheep and wolves.
+    """
+
+    energy = None
+
+    def __init__(self, unique_id, pos, model, moore, energy=None):
+        super().__init__(unique_id, pos, model, moore=moore)
+        self.energy = energy
+
+    def step(self):
+        self.random_move()
+        self.energy -= 1
+
+	# CHANGE THIS TO BE ONE WOLF OR ONE SHEEP IN THE CASE THERE ARE TWO
+
+        # If there are sheep or wolf present, eat one
+        x, y = self.pos
+        this_cell = self.model.grid.get_cell_list_contents([self.pos])
+        sheep = [obj for obj in this_cell if isinstance(obj, Sheep)]
+        wolf = [obj for obj in this_cell if isinstance(obj, Wolf)]
+        
+        if len(sheep) > 0:
+            sheep_to_eat = self.random.choice(sheep)
+            self.energy += self.model.wolf_gain_from_food
+
+            # Kill the sheep
+            self.model.grid.remove_agent(sheep_to_eat)
+            self.model.schedule.remove(sheep_to_eat)
+
+	# If there are wolves present, eat one
+        if len(wolf) > 0:
+            wolf_to_eat = self.random.choice(wolf)
+            self.energy += self.model.bear_gain_from_food
+
+            # Kill the wolf
+            self.model.grid.remove_agent(wolf_to_eat)
+            self.model.schedule.remove(wolf_to_eat)
+
+        # Death or reproduction
+        if self.energy < 0:
+            self.model.grid.remove_agent(self)
+            self.model.schedule.remove(self)
+        else:
+            if self.random.random() < self.model.bear_reproduce:
+                # Create a new bear cub
+                self.energy /= 2
+                cub = Bear(
+                    self.model.next_id(), self.pos, self.model, self.moore, self.energy
+                )
+                self.model.grid.place_agent(cub, cub.pos)
+                self.model.schedule.add(cub)
+
+
 class GrassPatch(mesa.Agent):
     """
     A patch of grass that grows at a fixed rate and it is eaten by sheep

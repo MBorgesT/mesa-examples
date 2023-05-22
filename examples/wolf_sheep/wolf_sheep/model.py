@@ -13,7 +13,7 @@ import numpy as np
 import mesa
 
 from wolf_sheep.scheduler import RandomActivationByTypeFiltered
-from wolf_sheep.agents import Sheep, Wolf, GrassPatch, Tree
+from wolf_sheep.agents import Sheep, Wolf, GrassPatch, Tree, Bear
 
 
 class WolfSheep(mesa.Model):
@@ -38,6 +38,10 @@ class WolfSheep(mesa.Model):
     tree_regrowth_time = 60
     sheep_gain_from_grass = 4
     sheep_gain_from_tree = 8
+    
+    initial_bears = 30
+    bear_gain_from_food = 20
+    bear_reproduce = 0.03
 
     verbose = False  # Print-monitoring
 
@@ -59,7 +63,10 @@ class WolfSheep(mesa.Model):
         grass_regrowth_time=30,
         tree_regrowth_time=60,
         sheep_gain_from_grass=4,
-        sheep_gain_from_tree=8
+        sheep_gain_from_tree=8,
+        bear_gain_from_food = 20,
+        bear_reproduce = 0.03,
+        initial_bears = 30
     ):
         """
         Create a new Wolf-Sheep model with the given parameters.
@@ -90,12 +97,17 @@ class WolfSheep(mesa.Model):
         self.tree_regrowth_time = tree_regrowth_time
         self.sheep_gain_from_grass = sheep_gain_from_grass
         self.sheep_gain_from_tree = sheep_gain_from_tree
+        
+        self.initial_bears = initial_bears
+        self.bear_gain_from_food = bear_gain_from_food
+        self.bear_reproduce = bear_reproduce
 
         self.schedule = RandomActivationByTypeFiltered(self)
         self.grid = mesa.space.MultiGrid(self.width, self.height, torus=True)
         self.datacollector = mesa.DataCollector(
             {
                 "Wolves": lambda m: m.schedule.get_type_count(Wolf),
+                "Bears": lambda m: m.schedule.get_type_count(Bear),
                 "Sheep": lambda m: m.schedule.get_type_count(Sheep),
                 "Grass": lambda m: m.schedule.get_type_count(
                     GrassPatch, lambda x: x.fully_grown
@@ -123,6 +135,15 @@ class WolfSheep(mesa.Model):
             wolf = Wolf(self.next_id(), (x, y), self, True, energy)
             self.grid.place_agent(wolf, (x, y))
             self.schedule.add(wolf)
+            
+        # Create bears
+        for i in range(self.initial_bears):
+            x = self.random.randrange(self.width)
+            y = self.random.randrange(self.height)
+            energy = self.random.randrange(2 * self.bear_gain_from_food)
+            bear = Bear(self.next_id(), (x, y), self, True, energy)
+            self.grid.place_agent(bear, (x, y))
+            self.schedule.add(bear)
 
         if self.grass and self.tree:
             # Alternates between tree and grass on generation
@@ -193,6 +214,7 @@ class WolfSheep(mesa.Model):
                     self.schedule.time,
                     self.schedule.get_type_count(Wolf),
                     self.schedule.get_type_count(Sheep),
+                    self.schedule.get_type_count(Bear),
                     self.schedule.get_type_count(GrassPatch, lambda x: x.fully_grown),
                 ]
             )
@@ -201,6 +223,7 @@ class WolfSheep(mesa.Model):
         if self.verbose:
             print("Initial number wolves: ", self.schedule.get_type_count(Wolf))
             print("Initial number sheep: ", self.schedule.get_type_count(Sheep))
+            print("Initial number bears: ", self.schedule.get_type_count(Bear))
             print(
                 "Initial number grass: ",
                 self.schedule.get_type_count(GrassPatch, lambda x: x.fully_grown),
@@ -213,6 +236,7 @@ class WolfSheep(mesa.Model):
             print("")
             print("Final number wolves: ", self.schedule.get_type_count(Wolf))
             print("Final number sheep: ", self.schedule.get_type_count(Sheep))
+            print("Final number bears: ", self.schedule.get_type_count(Bear))
             print(
                 "Final number grass: ",
                 self.schedule.get_type_count(GrassPatch, lambda x: x.fully_grown),
