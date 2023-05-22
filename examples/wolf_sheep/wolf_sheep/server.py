@@ -1,6 +1,6 @@
 import mesa
 
-from wolf_sheep.agents import Wolf, ZombieWolf, Sheep, GrassPatch, Tree
+from wolf_sheep.agents import Wolf, MadWolf, Sheep, GrassPatch, Tree
 from wolf_sheep.model import WolfSheep
 
 
@@ -24,8 +24,8 @@ def wolf_sheep_portrayal(agent):
         portrayal["text"] = round(agent.energy, 1)
         portrayal["text_color"] = "White"
 
-    elif type(agent) is ZombieWolf:
-        portrayal["Shape"] = "wolf_sheep/resources/zwolf.png"
+    elif type(agent) is MadWolf:
+        portrayal["Shape"] = "wolf_sheep/resources/mad_wolf.png"
         portrayal["scale"] = 0.9
         portrayal["Layer"] = 3
         portrayal["text"] = round(agent.energy, 1)
@@ -60,7 +60,7 @@ canvas_element = mesa.visualization.CanvasGrid(wolf_sheep_portrayal, 20, 20, 500
 chart_element = mesa.visualization.ChartModule(
     [
         {"Label": "Wolves", "Color": "#AA0000"},
-        {"Label": "ZombieWolves", "Color": "#440000"},
+        {"Label": "MadWolves", "Color": "#440000"},
         {"Label": "Sheep", "Color": "#666666"},
         {"Label": "Grass", "Color": "#00CC00"},
         {"Label": "Tree", "Color": "#015401"},
@@ -72,6 +72,7 @@ model_params = {
     "title": mesa.visualization.StaticText("Parameters:"),
     "grass": mesa.visualization.Checkbox("Grass Enabled", True),
     "tree": mesa.visualization.Checkbox("Tree Enabled", True),
+    "mad_wolf": mesa.visualization.Checkbox("Mad Wolf Enabled", True),
     "grass_regrowth_time": mesa.visualization.Slider("Grass Regrowth Time", 20, 1, 50),
     "tree_regrowth_time": mesa.visualization.Slider("Tree Regrowth Time", 40, 1, 100),
     "initial_sheep": mesa.visualization.Slider(
@@ -94,7 +95,7 @@ model_params = {
     ),
     "sheep_gain_from_grass": mesa.visualization.Slider("Sheep Gain From Grass", 4, 1, 10),
     "sheep_gain_from_tree": mesa.visualization.Slider("Sheep Gain From Tree", 8, 1, 20),
-    "zombie_wolf_chance": mesa.visualization.Slider("Chance For Wolf To Turn Into Zombie", 0.05, 0, 0.2, 0.01),
+    "mad_wolf_chance": mesa.visualization.Slider("Chance For Wolf To Turn Mad", 0.05, 0, 0.2, 0.01),
 }
 
 server = mesa.visualization.ModularServer(

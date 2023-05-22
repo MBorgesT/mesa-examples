@@ -72,9 +72,10 @@ class Wolf(RandomWalker):
 
     energy = None
 
-    def __init__(self, unique_id, pos, model, moore, zombie_chance, energy=None):
+    def __init__(self, unique_id, pos, model, moore, mad_wolf, mad_chance, energy=None):
         super().__init__(unique_id, pos, model, moore=moore)
-        self.zombie_chance = zombie_chance
+        self.mad_wolf = mad_wolf
+        self.mad_chance = mad_chance
         self.energy = energy
 
     def step(self):
@@ -93,11 +94,11 @@ class Wolf(RandomWalker):
             self.model.grid.remove_agent(sheep_to_eat)
             self.model.schedule.remove(sheep_to_eat)
 
-        # Turn into a zombie
-        if random.uniform(0, 1) < self.zombie_chance:
-            zombie = ZombieWolf(self.model.next_id(), self.pos, self.model, self.moore, self.energy / 4)
-            self.model.grid.place_agent(zombie, zombie.pos)
-            self.model.schedule.add(zombie)
+        # Turn mad
+        if self.mad_wolf and random.uniform(0, 1) < self.mad_chance:
+            mad_w = MadWolf(self.model.next_id(), self.pos, self.model, self.moore, self.energy / 4)
+            self.model.grid.place_agent(mad_w, mad_w.pos)
+            self.model.schedule.add(mad_w)
 
             # Dies
             self.energy = 0
@@ -111,15 +112,15 @@ class Wolf(RandomWalker):
                 # Create a new wolf cub
                 self.energy /= 2
                 cub = Wolf(
-                    self.model.next_id(), self.pos, self.model, self.moore, self.zombie_chance, self.energy
+                    self.model.next_id(), self.pos, self.model, self.moore, self.mad_wolf, self.mad_chance, self.energy
                 )
                 self.model.grid.place_agent(cub, cub.pos)
                 self.model.schedule.add(cub)
 
 
-class ZombieWolf(RandomWalker):
+class MadWolf(RandomWalker):
     """
-    A zombie wolf that walks around, eats healthy wolves.
+    A mad wolf that walks around, eats healthy wolves.
     """
 
     energy = None
