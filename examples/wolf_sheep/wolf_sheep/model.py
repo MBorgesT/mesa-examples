@@ -34,7 +34,10 @@ class WolfSheep(mesa.Model):
 
     grass = False
     tree = False
+    sheep = False
+    wolf = False
     mad_wolf = False
+    bear = False
 
     grass_regrowth_time = 30
     tree_regrowth_time = 60
@@ -64,7 +67,10 @@ class WolfSheep(mesa.Model):
         wolf_gain_from_food=20,
         grass=False,
         tree=False,
+        sheep=False,
+        wolf=False,
         mad_wolf=False,
+        bear=False,
         grass_regrowth_time=30,
         tree_regrowth_time=60,
         sheep_gain_from_grass=4,
@@ -99,7 +105,10 @@ class WolfSheep(mesa.Model):
         self.wolf_gain_from_food = wolf_gain_from_food
         self.grass = grass
         self.tree = tree
+        self.sheep = sheep
+        self.wolf = wolf
         self.mad_wolf = mad_wolf
+        self.bear = bear
         self.grass_regrowth_time = grass_regrowth_time
         self.tree_regrowth_time = tree_regrowth_time
         self.sheep_gain_from_grass = sheep_gain_from_grass
@@ -129,31 +138,34 @@ class WolfSheep(mesa.Model):
         )
 
         # Create sheep:
-        for i in range(self.initial_sheep):
-            x = self.random.randrange(self.width)
-            y = self.random.randrange(self.height)
-            energy = self.random.randrange(2 * self.sheep_gain_from_grass)
-            sheep = Sheep(self.next_id(), (x, y), self, True, energy)
-            self.grid.place_agent(sheep, (x, y))
-            self.schedule.add(sheep)
+        if self.sheep:
+            for i in range(self.initial_sheep):
+                x = self.random.randrange(self.width)
+                y = self.random.randrange(self.height)
+                energy = self.random.randrange(2 * self.sheep_gain_from_grass)
+                sheep = Sheep(self.next_id(), (x, y), self, True, energy)
+                self.grid.place_agent(sheep, (x, y))
+                self.schedule.add(sheep)
 
         # Create wolves
-        for i in range(self.initial_wolves):
-            x = self.random.randrange(self.width)
-            y = self.random.randrange(self.height)
-            energy = self.random.randrange(2 * self.wolf_gain_from_food)
-            wolf = Wolf(self.next_id(), (x, y), self, True, mad_wolf, mad_wolf_chance, energy)
-            self.grid.place_agent(wolf, (x, y))
-            self.schedule.add(wolf)
+        if self.wolf:
+            for i in range(self.initial_wolves):
+                x = self.random.randrange(self.width)
+                y = self.random.randrange(self.height)
+                energy = self.random.randrange(2 * self.wolf_gain_from_food)
+                wolf = Wolf(self.next_id(), (x, y), self, True, mad_wolf, mad_wolf_chance, energy)
+                self.grid.place_agent(wolf, (x, y))
+                self.schedule.add(wolf)
             
         # Create bears
-        for i in range(self.initial_bears):
-            x = self.random.randrange(self.width)
-            y = self.random.randrange(self.height)
-            energy = self.random.randrange(2 * self.bear_gain_from_food)
-            bear = Bear(self.next_id(), (x, y), self, True, energy)
-            self.grid.place_agent(bear, (x, y))
-            self.schedule.add(bear)
+        if self.bear:
+            for i in range(self.initial_bears):
+                x = self.random.randrange(self.width)
+                y = self.random.randrange(self.height)
+                energy = self.random.randrange(2 * self.bear_gain_from_food)
+                bear = Bear(self.next_id(), (x, y), self, True, energy)
+                self.grid.place_agent(bear, (x, y))
+                self.schedule.add(bear)
 
         if self.grass and self.tree:
             # Alternates between tree and grass on generation

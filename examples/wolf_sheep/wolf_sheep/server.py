@@ -80,7 +80,10 @@ model_params = {
     "title": mesa.visualization.StaticText("Parameters:"),
     "grass": mesa.visualization.Checkbox("Grass Enabled", True),
     "tree": mesa.visualization.Checkbox("Tree Enabled", True),
+    "sheep": mesa.visualization.Checkbox("Sheep Enabled", True),
+    "wolf": mesa.visualization.Checkbox("Wolf Enabled", True),
     "mad_wolf": mesa.visualization.Checkbox("Mad Wolf Enabled", True),
+    "bear": mesa.visualization.Checkbox("Bear Enabled", True),
     "grass_regrowth_time": mesa.visualization.Slider("Grass Regrowth Time", 20, 1, 50),
     "tree_regrowth_time": mesa.visualization.Slider("Tree Regrowth Time", 40, 1, 100),
     "initial_sheep": mesa.visualization.Slider(
