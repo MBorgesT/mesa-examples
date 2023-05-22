@@ -45,7 +45,7 @@ class WolfSheep(mesa.Model):
     sheep_gain_from_tree = 8
     
     initial_bears = 30
-    bear_gain_from_food = 20
+    bear_gain_from_food = 10
     bear_reproduce = 0.03
 
     mad_wolf_chance = 0.05
@@ -75,7 +75,7 @@ class WolfSheep(mesa.Model):
         tree_regrowth_time=60,
         sheep_gain_from_grass=4,
         sheep_gain_from_tree=8,
-        bear_gain_from_food = 20,
+        bear_gain_from_food = 10,
         bear_reproduce = 0.03,
         initial_bears = 30,
         mad_wolf_chance=0.05

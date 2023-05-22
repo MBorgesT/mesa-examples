@@ -104,7 +104,7 @@ model_params = {
     "wolf_gain_from_food": mesa.visualization.Slider(
         "Wolf Gain From Food Rate", 20, 1, 50
     ),
-    "initial_bears": mesa.visualization.Slider("Initial Bear Population", 30, 10, 300),
+    "initial_bears": mesa.visualization.Slider("Initial Bear Population", 15, 5, 150),
     "bear_reproduce": mesa.visualization.Slider(
         "Bear Reproduction Rate",
         0.03,
@@ -114,7 +114,7 @@ model_params = {
         description="The rate at which bear agents reproduce.",
     ),
     "bear_gain_from_food": mesa.visualization.Slider(
-        "Wolf Gain From Food Rate", 20, 1, 50
+        "Bear Gain From Food Rate", 10, 1, 25
     ),
     "sheep_gain_from_grass": mesa.visualization.Slider("Sheep Gain From Grass", 4, 1, 10),
     "sheep_gain_from_tree": mesa.visualization.Slider("Sheep Gain From Tree", 8, 1, 20),

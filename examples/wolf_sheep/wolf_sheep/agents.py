@@ -165,13 +165,14 @@ class Bear(RandomWalker):
         self.random_move()
         self.energy -= 1
 
-	# CHANGE THIS TO BE ONE WOLF OR ONE SHEEP IN THE CASE THERE ARE TWO
+	    # CHANGE THIS TO BE ONE WOLF OR ONE SHEEP IN THE CASE THERE ARE TWO
 
         # If there are sheep or wolf present, eat one
         x, y = self.pos
         this_cell = self.model.grid.get_cell_list_contents([self.pos])
         sheep = [obj for obj in this_cell if isinstance(obj, Sheep)]
         wolf = [obj for obj in this_cell if isinstance(obj, Wolf)]
+        mad_wolf = [obj for obj in this_cell if isinstance(obj, MadWolf)]
         
         if len(sheep) > 0:
             sheep_to_eat = self.random.choice(sheep)
@@ -189,6 +190,16 @@ class Bear(RandomWalker):
             # Kill the wolf
             self.model.grid.remove_agent(wolf_to_eat)
             self.model.schedule.remove(wolf_to_eat)
+
+        if len(mad_wolf) > 0:
+            mad_wolf_to_eat = self.random.choice(mad_wolf)
+
+            # Kill the mad wolf
+            self.model.grid.remove_agent(mad_wolf_to_eat)
+            self.model.schedule.remove(mad_wolf_to_eat)
+
+            # Dies by eating the mad wolf
+            self.energy = -1
 
         # Death or reproduction
         if self.energy < 0:
