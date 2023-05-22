@@ -13,7 +13,7 @@ import numpy as np
 import mesa
 
 from wolf_sheep.scheduler import RandomActivationByTypeFiltered
-from wolf_sheep.agents import Sheep, Wolf, GrassPatch, Tree
+from wolf_sheep.agents import Sheep, Wolf, ZombieWolf, GrassPatch, Tree
 
 
 class WolfSheep(mesa.Model):
@@ -39,6 +39,8 @@ class WolfSheep(mesa.Model):
     sheep_gain_from_grass = 4
     sheep_gain_from_tree = 8
 
+    zombie_wolf_chance = 0.05
+
     verbose = False  # Print-monitoring
 
     description = (
@@ -59,7 +61,8 @@ class WolfSheep(mesa.Model):
         grass_regrowth_time=30,
         tree_regrowth_time=60,
         sheep_gain_from_grass=4,
-        sheep_gain_from_tree=8
+        sheep_gain_from_tree=8,
+        zombie_wolf_chance=0.05
     ):
         """
         Create a new Wolf-Sheep model with the given parameters.
@@ -90,12 +93,14 @@ class WolfSheep(mesa.Model):
         self.tree_regrowth_time = tree_regrowth_time
         self.sheep_gain_from_grass = sheep_gain_from_grass
         self.sheep_gain_from_tree = sheep_gain_from_tree
+        self.zombie_wolf_chance = zombie_wolf_chance
 
         self.schedule = RandomActivationByTypeFiltered(self)
         self.grid = mesa.space.MultiGrid(self.width, self.height, torus=True)
         self.datacollector = mesa.DataCollector(
             {
                 "Wolves": lambda m: m.schedule.get_type_count(Wolf),
+                "ZombieWolves": lambda m: m.schedule.get_type_count(ZombieWolf),
                 "Sheep": lambda m: m.schedule.get_type_count(Sheep),
                 "Grass": lambda m: m.schedule.get_type_count(
                     GrassPatch, lambda x: x.fully_grown
@@ -120,7 +125,7 @@ class WolfSheep(mesa.Model):
             x = self.random.randrange(self.width)
             y = self.random.randrange(self.height)
             energy = self.random.randrange(2 * self.wolf_gain_from_food)
-            wolf = Wolf(self.next_id(), (x, y), self, True, energy)
+            wolf = Wolf(self.next_id(), (x, y), self, True, zombie_wolf_chance, energy)
             self.grid.place_agent(wolf, (x, y))
             self.schedule.add(wolf)
 
@@ -152,7 +157,7 @@ class WolfSheep(mesa.Model):
                     raise Exception("This shouldn't happen :|")
 
         else:
-        # Create grass patches
+            # Create grass patches
             if self.grass:
                 for agent, x, y in self.grid.coord_iter():
                     fully_grown = self.random.choice([True, False])
@@ -192,18 +197,25 @@ class WolfSheep(mesa.Model):
                 [
                     self.schedule.time,
                     self.schedule.get_type_count(Wolf),
+                    self.schedule.get_type_count(ZombieWolf),
                     self.schedule.get_type_count(Sheep),
                     self.schedule.get_type_count(GrassPatch, lambda x: x.fully_grown),
+                    self.schedule.get_type_count(Tree, lambda x: x.fully_grown),
                 ]
             )
 
     def run_model(self, step_count=200):
         if self.verbose:
             print("Initial number wolves: ", self.schedule.get_type_count(Wolf))
+            print("Initial number zombie wolves: ", self.schedule.get_type_count(ZombieWolf))
             print("Initial number sheep: ", self.schedule.get_type_count(Sheep))
             print(
                 "Initial number grass: ",
                 self.schedule.get_type_count(GrassPatch, lambda x: x.fully_grown),
+            )
+            print(
+                "Initial number tree: ",
+                self.schedule.get_type_count(Tree, lambda x: x.fully_grown),
             )
 
         for i in range(step_count):
@@ -212,8 +224,13 @@ class WolfSheep(mesa.Model):
         if self.verbose:
             print("")
             print("Final number wolves: ", self.schedule.get_type_count(Wolf))
+            print("Final number zombie wolves: ", self.schedule.get_type_count(ZombieWolf))
             print("Final number sheep: ", self.schedule.get_type_count(Sheep))
             print(
                 "Final number grass: ",
                 self.schedule.get_type_count(GrassPatch, lambda x: x.fully_grown),
+            )
+            print(
+                "Final number tree: ",
+                self.schedule.get_type_count(Tree, lambda x: x.fully_grown),
             )

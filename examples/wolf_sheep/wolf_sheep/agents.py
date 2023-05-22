@@ -1,4 +1,5 @@
 import mesa
+import random 
 from wolf_sheep.random_walk import RandomWalker
 
 
@@ -71,8 +72,9 @@ class Wolf(RandomWalker):
 
     energy = None
 
-    def __init__(self, unique_id, pos, model, moore, energy=None):
+    def __init__(self, unique_id, pos, model, moore, zombie_chance, energy=None):
         super().__init__(unique_id, pos, model, moore=moore)
+        self.zombie_chance = zombie_chance
         self.energy = energy
 
     def step(self):
@@ -91,6 +93,15 @@ class Wolf(RandomWalker):
             self.model.grid.remove_agent(sheep_to_eat)
             self.model.schedule.remove(sheep_to_eat)
 
+        # Turn into a zombie
+        if random.uniform(0, 1) < self.zombie_chance:
+            zombie = ZombieWolf(self.model.next_id(), self.pos, self.model, self.moore, self.energy / 4)
+            self.model.grid.place_agent(zombie, zombie.pos)
+            self.model.schedule.add(zombie)
+
+            # Dies
+            self.energy = 0
+
         # Death or reproduction
         if self.energy < 0:
             self.model.grid.remove_agent(self)
@@ -100,10 +111,42 @@ class Wolf(RandomWalker):
                 # Create a new wolf cub
                 self.energy /= 2
                 cub = Wolf(
-                    self.model.next_id(), self.pos, self.model, self.moore, self.energy
+                    self.model.next_id(), self.pos, self.model, self.moore, self.zombie_chance, self.energy
                 )
                 self.model.grid.place_agent(cub, cub.pos)
                 self.model.schedule.add(cub)
+
+
+class ZombieWolf(RandomWalker):
+    """
+    A zombie wolf that walks around, eats healthy wolves.
+    """
+
+    energy = None
+
+    def __init__(self, unique_id, pos, model, moore, energy=None):
+        super().__init__(unique_id, pos, model, moore=moore)
+        self.energy = energy
+
+    def step(self):
+        self.random_move()
+        self.energy -= 1
+
+        # If there are healthy wolves present, eat one
+        x, y = self.pos
+        this_cell = self.model.grid.get_cell_list_contents([self.pos])
+        healthy_wolves = [obj for obj in this_cell if isinstance(obj, Wolf)]
+        if len(healthy_wolves) > 0:
+            wolf_to_eat = self.random.choice(healthy_wolves)
+
+            # Kill the wolf
+            self.model.grid.remove_agent(wolf_to_eat)
+            self.model.schedule.remove(wolf_to_eat)
+
+        # Death
+        if self.energy < 0:
+            self.model.grid.remove_agent(self)
+            self.model.schedule.remove(self)
 
 
 class GrassPatch(mesa.Agent):
